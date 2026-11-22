@@ -3,6 +3,7 @@ from dataclasses import asdict
 from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from yt_mcp.transcript import (
     NoTranscriptAvailableError,
@@ -25,6 +26,12 @@ app = FastAPI(
     title="YouTube Transcript API",
     description="Fetch YouTube captions and translate them with Argos Translate.",
     version="1.0.0",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
 )
 translation_backend = ArgosTranslateBackend()
 _WORDS_PER_CHUNK = 500
