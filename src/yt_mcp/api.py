@@ -37,7 +37,20 @@ translation_backend = ArgosTranslateBackend()
 _WORDS_PER_CHUNK = 500
 
 
+@app.get("/")
+def root() -> Dict[str, str]:
+    """Provide a successful response for platform health probes."""
+    return {
+        "service": "youtube-transcript-translator",
+        "status": "ok",
+        "health": "/health",
+    }
+
+
 @app.get("/health")
+@app.get("/healthz", include_in_schema=False)
+@app.get("/api/health", include_in_schema=False)
+@app.get("/actuator/health", include_in_schema=False)
 def health() -> Dict[str, object]:
     """Report server and local translation-model availability."""
     return {
