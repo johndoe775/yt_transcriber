@@ -15,9 +15,12 @@ root-level `Dockerfile` builds the API and listens on the platform-provided
 
 ## GitHub Pages UI
 
-Publish this repository with GitHub Pages using the root `/` as the source.
-The UI is in `index.html`; enter your SnapDeploy API URL in the page before
-using it. The API allows cross-origin GET requests for the static UI.
+The `Deploy GitHub Pages` workflow publishes the UI on pushes to `main`. Add a
+repository Actions secret named `BACKEND_API_URL` containing the public HTTPS
+SnapDeploy URL, then set **Settings → Pages → Build and deployment → Source** to
+**GitHub Actions**. The workflow inserts that URL into `index.html` before
+publishing. The URL is visible in the public page, so do not put credentials in
+it. The API allows cross-origin GET requests for the static UI.
 
 - `GET /health` reports server and Argos model availability.
 - `GET /transcript?url=<youtube-url>&source_language=auto` returns transcript text, segments, and paragraphs.

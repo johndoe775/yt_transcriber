@@ -1,0 +1,69 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure backend URL
+        env:
+          BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
+        run: |
+          python - <<'PY'
+          import html
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          value = os.environ.get("BACKEND_API_URL", "").strip().rstrip("/")
+          parsed = urlsplit(value)
+          if parsed.scheme != "https" or not parsed.netloc:
+              raise SystemExit("Set BACKEND_API_URL to the public HTTPS backend URL.")
+
+          index = Path("index.html")
+          content = index.read_text(encoding="utf-8")
+          marker = "__BACKEND_API_URL__"
+          if marker not in content:
+              raise SystemExit("Backend URL placeholder not found in index.html.")
+          index.write_text(
+              content.replace(marker, html.escape(value, quote=True)),
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

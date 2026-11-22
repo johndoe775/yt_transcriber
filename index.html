@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#11131b">
   <meta name="description" content="Get and translate transcripts from YouTube videos.">
+  <meta name="backend-api-url" content="__BACKEND_API_URL__">
   <title>YT Transcriber</title>
   <style>
     :root {
@@ -198,7 +199,7 @@
         <label for="api-url">API base URL</label>
         <input id="api-url" name="api-url" type="url" inputmode="url"
           placeholder="https://your-app.snapdeploy.app" autocomplete="url" required>
-        <p class="hint">Your deployed SnapDeploy URL. It is saved in this browser.</p>
+        <p class="hint">Prefilled from deployment settings. You can change it; changes are saved in this browser.</p>
       </div>
 
       <div class="field">
@@ -257,9 +258,12 @@
     const status = document.querySelector("#status");
     const results = document.querySelector("#results");
     const buttons = [...form.querySelectorAll("button")];
+    const configuredApiUrl = document.querySelector('meta[name="backend-api-url"]').content;
 
     try {
-      apiInput.value = localStorage.getItem("yt-transcriber-api-url") || "";
+      apiInput.value = configuredApiUrl.startsWith("https://")
+        ? configuredApiUrl
+        : localStorage.getItem("yt-transcriber-api-url") || "";
     } catch {
       // Local storage may be unavailable in some browser privacy modes.
     }
