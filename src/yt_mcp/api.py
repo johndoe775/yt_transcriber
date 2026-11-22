@@ -51,13 +51,18 @@ def root() -> Dict[str, str]:
 @app.get("/healthz", include_in_schema=False)
 @app.get("/api/health", include_in_schema=False)
 @app.get("/actuator/health", include_in_schema=False)
-def health() -> Dict[str, object]:
-    """Report server and local translation-model availability."""
+def health() -> Dict[str, str]:
+    """Provide a lightweight liveness check for the service."""
     return {
         "service": "youtube-transcript-translator",
         "status": "ok",
-        "translation_available": translation_backend.is_available(),
     }
+
+
+@app.get("/translation-health")
+def translation_health() -> Dict[str, bool]:
+    """Report whether local translation models are installed."""
+    return {"translation_available": translation_backend.is_available()}
 
 
 @app.get("/transcript")

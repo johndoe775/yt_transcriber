@@ -395,11 +395,8 @@
       setStatus("Checking API…");
       saveApiUrl();
       try {
-        const health = await requestJson("/health", new URLSearchParams());
-        const translation = health.translation_available
-          ? "Translation models are available."
-          : "API is online, but translation models are not installed.";
-        setStatus(`API is online. ${translation}`, "success");
+        await requestJson("/health", new URLSearchParams());
+        setStatus("API is online. Translation requires the matching Argos models.", "success");
       } catch (error) {
         setStatus(error.message || "Could not reach the API.", "error");
       } finally {
