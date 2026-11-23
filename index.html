@@ -196,13 +196,6 @@
 
     <form class="panel" id="transcriber-form">
       <div class="field">
-        <label for="api-url">API base URL</label>
-        <input id="api-url" name="api-url" type="url" inputmode="url"
-          placeholder="https://your-app.snapdeploy.app" autocomplete="url" required>
-        <p class="hint">Prefilled from deployment settings. You can change it; changes are saved in this browser.</p>
-      </div>
-
-      <div class="field">
         <label for="video-url">YouTube video URL or ID</label>
         <input id="video-url" name="url" type="text"
           placeholder="https://www.youtube.com/watch?v=..." autocomplete="url" required>
@@ -254,19 +247,10 @@
 
   <script>
     const form = document.querySelector("#transcriber-form");
-    const apiInput = document.querySelector("#api-url");
     const status = document.querySelector("#status");
     const results = document.querySelector("#results");
     const buttons = [...form.querySelectorAll("button")];
-    const configuredApiUrl = document.querySelector('meta[name="backend-api-url"]').content;
-
-    try {
-      apiInput.value = configuredApiUrl.startsWith("https://")
-        ? configuredApiUrl
-        : localStorage.getItem("yt-transcriber-api-url") || "";
-    } catch {
-      // Local storage may be unavailable in some browser privacy modes.
-    }
+    const configuredApiUrl = document.querySelector('meta[name="backend-api-url"]').content.trim();
 
     function setStatus(message, kind = "") {
       status.textContent = message;
@@ -274,20 +258,16 @@
     }
 
     function getApiBase() {
-      const value = apiInput.value.trim();
-      const url = new URL(value);
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
-        throw new Error("The API URL must start with http:// or https://.");
+      let url;
+      try {
+        url = new URL(configuredApiUrl);
+      } catch {
+        throw new Error("The backend URL is not configured. Set the BACKEND_API_URL GitHub secret and redeploy Pages.");
+      }
+      if (url.protocol !== "https:") {
+        throw new Error("The backend URL must use HTTPS.");
       }
       return url.href.replace(/\/+$/, "");
-    }
-
-    function saveApiUrl() {
-      try {
-        localStorage.setItem("yt-transcriber-api-url", apiInput.value.trim());
-      } catch {
-        // Continue without saving the URL.
-      }
     }
 
     async function requestJson(path, params) {
@@ -364,7 +344,6 @@
       buttons.forEach((button) => { button.disabled = true; });
       setStatus(action === "translate" ? "Fetching and translating…" : "Fetching transcript…");
       results.hidden = true;
-      saveApiUrl();
 
       try {
         const data = await requestJson(`/${action}`, params);
@@ -393,7 +372,6 @@
       const checkButton = document.querySelector("#check-api");
       checkButton.disabled = true;
       setStatus("Checking API…");
-      saveApiUrl();
       try {
         await requestJson("/health", new URLSearchParams());
         setStatus("API is online. Translation requires the matching Argos models.", "success");
